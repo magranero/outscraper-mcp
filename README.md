@@ -1,45 +1,58 @@
 # Outscraper MCP Server
 
-A comprehensive Model Context Protocol (MCP) server that provides access to Outscraper's powerful data extraction services. This server implements **8 complete tools** for extracting data from Google services and domains.
+[![smithery badge](https://smithery.ai/badge/outscraper-mcp)](https://smithery.ai/protocol/outscraper-mcp)
+[![PyPI version](https://badge.fury.io/py/outscraper-mcp.svg)](https://pypi.org/project/outscraper-mcp/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+
+A streamlined Model Context Protocol (MCP) server that provides access to Outscraper's Google Maps data extraction services. This server implements **2 essential tools** for extracting Google Maps data with high reliability.
 
 ## 🚀 Features
 
-### Complete Outscraper Service Coverage
+### Google Maps Data Extraction
 - **🗺️ Google Maps Search** - Search for businesses and places with detailed information
-- **⭐ Google Maps Reviews** - Extract customer reviews from any Google Maps place  
-- **📸 Google Maps Photos** - Get photos from Google Maps places with metadata
-- **🧭 Google Maps Directions** - Get directions between locations with multiple travel modes
-- **🔍 Google Search** - Perform general Google web searches with structured results
-- **📰 Google News Search** - Search Google News with time-based filtering
-- **📱 Google Play Reviews** - Extract app reviews from Google Play Store
-- **📧 Email & Contact Extraction** - Extract emails, phones, and social links from domains
+- **⭐ Google Maps Reviews** - Extract customer reviews from any Google Maps place
 
 ### Advanced Capabilities
 - **Data Enrichment** - Automatically enhance results with additional contact information
 - **Multi-language Support** - Search and extract data in different languages
 - **Regional Filtering** - Target specific countries/regions for localized results
 - **Flexible Sorting** - Sort results by relevance, date, rating, etc.
+- **Time-based Filtering** - Get only recent reviews or filter by date
 - **Batch Processing** - Process multiple queries efficiently
-- **Time-based Filtering** - Get only recent reviews or news articles
 
 ## 📦 Installation
 
-### Prerequisites
-- Python 3.10+
-- [uv](https://docs.astral.sh/uv/) (recommended) or pip
-- Outscraper API key
+### Installing via Smithery (Recommended)
 
-### Install with uv (recommended)
+To install the Outscraper MCP server for Claude Desktop automatically via [Smithery](https://smithery.ai):
+
 ```bash
-git clone <repository-url>
-cd outscraper-mcp
-uv sync
+npx -y @smithery/cli install outscraper-mcp --client claude
 ```
 
-### Install with pip
+### Installing via PyPI
+
 ```bash
-git clone <repository-url>
+# Using pip
+pip install outscraper-mcp
+
+# Using uv (recommended)
+uv add outscraper-mcp
+
+# Using uvx for one-time execution
+uvx outscraper-mcp
+```
+
+### Manual Installation
+
+```bash
+git clone https://github.com/jayozer/outscraper-mcp
 cd outscraper-mcp
+
+# Using uv (recommended)
+uv sync
+
+# Using pip
 pip install -e .
 ```
 
@@ -57,6 +70,92 @@ export OUTSCRAPER_API_KEY="your_api_key_here"
 Or create a `.env` file:
 ```env
 OUTSCRAPER_API_KEY=your_api_key_here
+```
+
+## 🛠️ Client Configuration
+
+### Claude Desktop
+
+Add to your `claude_desktop_config.json`:
+
+**Via Smithery (Automatic):**
+```json
+{
+  "mcpServers": {
+    "outscraper": {
+      "command": "npx",
+      "args": ["-y", "@smithery/cli", "run", "outscraper-mcp"],
+      "env": {
+        "OUTSCRAPER_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+**Via Local Installation:**
+```json
+{
+  "mcpServers": {
+    "outscraper": {
+      "command": "uvx",
+      "args": ["outscraper-mcp"],
+      "env": {
+        "OUTSCRAPER_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+**Via Manual Installation:**
+```json
+{
+  "mcpServers": {
+    "outscraper": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "outscraper_mcp"],
+      "env": {
+        "OUTSCRAPER_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### Other MCP Clients
+
+**Cursor AI:**
+```json
+{
+  "mcpServers": {
+    "outscraper": {
+      "command": "outscraper-mcp",
+      "env": {
+        "OUTSCRAPER_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+**Zed Editor:**
+```json
+{
+  "assistant": {
+    "provider": {
+      "name": "anthropic",
+      "mcp_servers": {
+        "outscraper": {
+          "command": "outscraper-mcp",
+          "env": {
+            "OUTSCRAPER_API_KEY": "your_api_key_here"
+          }
+        }
+      }
+    }
+  }
+}
 ```
 
 ## 🛠️ Tools Reference
@@ -86,72 +185,27 @@ region: str = None      # Country/region code
 cutoff: int = None      # Unix timestamp for reviews after specific date
 ```
 
-### google_maps_photos
-Extract photos from Google Maps places
-```python
-# Parameters:
-query: str              # Place query, place ID, or business name
-photos_limit: int = 20  # Number of photos per place
-limit: int = 1          # Number of places to process
-language: str = "en"    # Language code
-region: str = None      # Country/region code
-```
-
-### google_maps_directions
-Get directions between locations
-```python
-# Parameters:
-query: str              # Route query (e.g., 'from Times Square to Central Park')
-travel_mode: str = "driving"  # 'driving', 'walking', 'bicycling', 'transit'
-departure_time: int = None    # Unix timestamp for departure time
-language: str = "en"    # Language code
-```
-
-### google_search
-Perform Google web search
-```python
-# Parameters:
-query: str              # Search query
-pages_per_query: int = 1 # Number of result pages
-language: str = "en"    # Language code
-region: str = None      # Country/region code
-```
-
-### google_search_news
-Search Google News
-```python
-# Parameters:
-query: str              # News search query
-pages_per_query: int = 1 # Number of result pages
-language: str = "en"    # Language code
-region: str = None      # Country/region code
-tbs: str = None         # Time filter: 'qdr:d' (day), 'qdr:w' (week), 'qdr:m' (month)
-```
-
-### google_play_reviews
-Extract Google Play Store app reviews
-```python
-# Parameters:
-query: str              # App package name (e.g., 'com.facebook.katana')
-reviews_limit: int = 100 # Number of reviews to extract
-sort: str = "most_relevant"  # 'most_relevant', 'newest', 'rating'
-language: str = "en"    # Language code
-```
-
-### emails_and_contacts
-Extract emails and contacts from domains
-```python
-# Parameters:
-query: str              # Domain name (e.g., 'outscraper.com')
-```
-
 ## 🚀 Running the Server
+
+### Development & Testing
+```bash
+# FastMCP Inspector - Web-based testing dashboard
+fastmcp dev outscraper_mcp/server.py
+
+# Then open your browser to: http://127.0.0.1:6274
+# Interactive testing of Google Maps tools with real-time responses
+```
 
 ### Stdio Transport (Default)
 ```bash
-python -m outscraper_mcp
-# or
+# Via PyPI installation
 outscraper-mcp
+
+# Via uv
+uv run python -m outscraper_mcp
+
+# Via manual installation
+python -m outscraper_mcp
 ```
 
 ### HTTP Transport
@@ -182,37 +236,40 @@ reviews = google_maps_reviews(
 )
 ```
 
-### Example 2: Research Competition
+### Example 2: Lead Generation with Enrichment
 ```python
-# 1. Search for competitors
-competitors = google_search(
-    query="best pizza delivery apps 2024",
-    pages_per_query=2,
-    region="US"
-)
-
-# 2. Get app reviews
-app_reviews = google_play_reviews(
-    query="com.dominos.android",
-    reviews_limit=50,
-    sort="newest"
-)
-```
-
-### Example 3: Lead Generation
-```python
-# 1. Find businesses
+# Find businesses with enhanced contact information
 businesses = google_maps_search(
     query="digital marketing agencies chicago",
     limit=20,
     enrichment=["domains_service", "emails_validator_service"]
 )
 
-# 2. Extract contact information
+# Get detailed reviews for sentiment analysis
 for business in businesses:
-    if business.get('site'):
-        domain = business['site'].replace('https://', '').replace('http://', '')
-        contacts = emails_and_contacts(query=domain)
+    if business.get('place_id'):
+        reviews = google_maps_reviews(
+            query=business['place_id'],
+            reviews_limit=10,
+            sort="newest"
+        )
+```
+
+### Example 3: Market Research
+```python
+# Research competitors in specific area
+competitors = google_maps_search(
+    query="coffee shops downtown portland",
+    limit=50,
+    region="US"
+)
+
+# Analyze recent customer feedback
+recent_reviews = google_maps_reviews(
+    query="coffee shops downtown portland",
+    reviews_limit=100,
+    sort="newest"
+)
 ```
 
 ## 🔄 Integration with MCP Clients
@@ -220,22 +277,10 @@ for business in businesses:
 This server is compatible with any MCP client, including:
 - [Claude Desktop](https://claude.ai/desktop)
 - [Zed Editor](https://zed.dev)
+- [Cursor AI](https://cursor.sh)
+- [Raycast](https://raycast.com)
+- [VS Code](https://code.visualstudio.com) with MCP extensions
 - Custom MCP clients
-
-### Claude Desktop Configuration
-Add to your `claude_desktop_config.json`:
-```json
-{
-  "mcpServers": {
-    "outscraper": {
-      "command": "outscraper-mcp",
-      "env": {
-        "OUTSCRAPER_API_KEY": "your_api_key_here"
-      }
-    }
-  }
-}
-```
 
 ## 📊 Rate Limits & Pricing
 
@@ -247,9 +292,18 @@ Add to your `claude_desktop_config.json`:
 
 ### Common Issues
 
-1. **Import Error**: Make sure you've installed FastMCP 2.0
+1. **Import Error**: Make sure you've installed the package correctly
+   ```bash
+   pip install --upgrade outscraper-mcp
+   ```
+
 2. **API Key Error**: Verify your API key is set correctly
+   ```bash
+   echo $OUTSCRAPER_API_KEY
+   ```
+
 3. **No Results**: Check if your query parameters are valid
+
 4. **Rate Limits**: Implement delays between requests if needed
 
 ### Enable Debug Logging
@@ -277,7 +331,8 @@ Experimental Software License - see LICENSE file for details.
 - [Outscraper API Documentation](https://app.outscraper.com/api-docs)
 - [FastMCP Documentation](https://gofastmcp.com)
 - [Model Context Protocol](https://modelcontextprotocol.io)
+- [Smithery Registry](https://smithery.ai)
 
 ---
 
-**Built with Blu Goldens** 
+**Built with Blu Goldens**
