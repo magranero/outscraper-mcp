@@ -1,6 +1,6 @@
 # Outscraper MCP Server
 
-[![smithery badge](https://smithery.ai/badge/outscraper-mcp)](https://smithery.ai/protocol/outscraper-mcp)
+[![smithery badge](https://smithery.ai/badge/@jayozer/outscraper-mcp)](https://smithery.ai/server/@jayozer/outscraper-mcp)
 [![PyPI version](https://badge.fury.io/py/outscraper-mcp.svg)](https://pypi.org/project/outscraper-mcp/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
