@@ -109,4 +109,5 @@ extend-ignore = ["E203", "W503"]
 dev = [
     "pytest>=8.3.5",
     "pytest-asyncio>=1.0.0",
+    "twine>=6.1.0",
 ]
