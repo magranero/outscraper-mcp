@@ -1,9 +1,9 @@
 [project]
 name = "outscraper-mcp"
 version = "1.0.0"
-description = "Comprehensive MCP server for Outscraper's Google Maps data extraction services - 8 complete tools for maps search, reviews, photos, directions, web search, news, Play Store reviews, and contact extraction"
+description = "Streamlined MCP server for Outscraper's Google Maps data extraction services - 2 essential tools for maps search and reviews"
 authors = [
-    {name = "Jay Ozer", email = "jay@example.com"}
+    {name = "Jay Ozer", email = "jay.ozer@dataacrobat.com"}
 ]
 readme = "README.md"
 license = {text = "Experimental Software License"}
@@ -52,7 +52,7 @@ Documentation = "https://github.com/jayozer/outscraper-mcp#readme"
 "Source Code" = "https://github.com/jayozer/outscraper-mcp"
 
 [project.scripts]
-outscraper-mcp = "outscraper_mcp:main"
+outscraper-mcp = "outscraper_mcp.__init__:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -104,3 +104,9 @@ addopts = "-v --tb=short"
 [tool.flake8]
 max-line-length = 88
 extend-ignore = ["E203", "W503"] 
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-asyncio>=1.0.0",
+]

@@ -24,10 +24,11 @@ mcp = FastMCP("outscraper-mcp")
 
 # Outscraper API configuration
 OUTSCRAPER_API_BASE = "https://api.app.outscraper.com"
-API_KEY = os.getenv("OUTSCRAPER_API_KEY", "api_key")
+API_KEY = os.getenv("OUTSCRAPER_API_KEY")
 
-if API_KEY == "api_key":
-    logger.warning("Using placeholder API key. Please set OUTSCRAPER_API_KEY environment variable.")
+if not API_KEY:
+    logger.error("OUTSCRAPER_API_KEY environment variable is required. Please set it before running the server.")
+    raise ValueError("OUTSCRAPER_API_KEY environment variable is required")
 
 class OutscraperClient:
     """Outscraper API client for making requests"""
@@ -62,13 +63,25 @@ class OutscraperClient:
                         return response_json.get('data', response_json)
                     else:
                         return response_json
-            except Exception as e:
+            except ValueError as e:
                 logger.error(f"Failed to parse JSON response: {e}")
+                logger.error(f"Raw response: {response.text[:500]}")
+                raise Exception(f'Invalid JSON response from API: {e}')
+            except Exception as e:
+                logger.error(f"Unexpected error parsing response: {e}")
                 logger.error(f"Raw response: {response.text[:500]}")
                 raise Exception(f'Failed to parse API response: {e}')
         else:
-            logger.error(f"API request failed - Status: {response.status_code}, Response: {response.text[:500]}")
-            raise Exception(f'API request failed with status code: {response.status_code}, Response: {response.text[:500]}')
+            error_msg = f"API request failed with status {response.status_code}"
+            try:
+                error_json = response.json()
+                if isinstance(error_json, dict) and 'message' in error_json:
+                    error_msg += f": {error_json['message']}"
+            except:
+                error_msg += f": {response.text[:200]}"
+            
+            logger.error(error_msg)
+            raise Exception(error_msg)
     
     def google_maps_search(self, query: Union[List[str], str], limit: int = 20, 
                           language: str = 'en', region: str = None, 
@@ -94,13 +107,20 @@ class OutscraperClient:
         if enrichment:
             params['enrichment'] = enrichment
             
-        response = requests.get(
-            f'{OUTSCRAPER_API_BASE}/maps/search-v3',
-            params=params,
-            headers=self.headers
-        )
-        
-        return self._handle_response(response, wait_async)
+        try:
+            response = requests.get(
+                f'{OUTSCRAPER_API_BASE}/maps/search-v3',
+                params=params,
+                headers=self.headers,
+                timeout=30
+            )
+            return self._handle_response(response, wait_async)
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Network error during Google Maps search: {e}")
+            raise Exception(f"Network error: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error during Google Maps search: {e}")
+            raise
     
     def google_maps_reviews(self, query: Union[List[str], str], reviews_limit: int = 10,
                            limit: int = 1, sort: str = 'most_relevant', 
@@ -128,13 +148,20 @@ class OutscraperClient:
         if cutoff:
             params['cutoff'] = cutoff
             
-        response = requests.get(
-            f'{OUTSCRAPER_API_BASE}/maps/reviews-v3',
-            params=params,
-            headers=self.headers
-        )
-        
-        return self._handle_response(response, wait_async)
+        try:
+            response = requests.get(
+                f'{OUTSCRAPER_API_BASE}/maps/reviews-v3',
+                params=params,
+                headers=self.headers,
+                timeout=30
+            )
+            return self._handle_response(response, wait_async)
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Network error during Google Maps reviews: {e}")
+            raise Exception(f"Network error: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error during Google Maps reviews: {e}")
+            raise
 
 # Initialize client
 client = OutscraperClient(API_KEY)

@@ -13,12 +13,12 @@ A streamlined Model Context Protocol (MCP) server that provides access to Outscr
 - **⭐ Google Maps Reviews** - Extract customer reviews from any Google Maps place
 
 ### Advanced Capabilities
-- **Data Enrichment** - Automatically enhance results with additional contact information
+- **Data Enrichment** - Enhance results with additional contact information via enrichment parameter
 - **Multi-language Support** - Search and extract data in different languages
 - **Regional Filtering** - Target specific countries/regions for localized results
-- **Flexible Sorting** - Sort results by relevance, date, rating, etc.
-- **Time-based Filtering** - Get only recent reviews or filter by date
-- **Batch Processing** - Process multiple queries efficiently
+- **Flexible Sorting** - Sort reviews by relevance, date, rating, etc.
+- **Time-based Filtering** - Filter reviews by date using cutoff parameter
+- **High Volume Support** - Handles async processing for large requests automatically
 
 ## 📦 Installation
 
@@ -123,9 +123,24 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
-### Other MCP Clients
+### Cursor AI
 
-**Cursor AI:**
+**Automatic Installation with UVX (Recommended):**
+```json
+{
+  "mcpServers": {
+    "outscraper": {
+      "command": "uvx",
+      "args": ["outscraper-mcp"],
+      "env": {
+        "OUTSCRAPER_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+**Manual Installation:**
 ```json
 {
   "mcpServers": {
@@ -139,24 +154,10 @@ Add to your `claude_desktop_config.json`:
 }
 ```
 
-**Zed Editor:**
-```json
-{
-  "assistant": {
-    "provider": {
-      "name": "anthropic",
-      "mcp_servers": {
-        "outscraper": {
-          "command": "outscraper-mcp",
-          "env": {
-            "OUTSCRAPER_API_KEY": "your_api_key_here"
-          }
-        }
-      }
-    }
-  }
-}
-```
+> **Note for Cursor Users**: The configuration file is typically located at:
+> - **macOS**: `~/Library/Application Support/Cursor/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
+> - **Windows**: `%APPDATA%\Cursor\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json`
+> - **Linux**: `~/.config/Cursor/User/globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json`
 
 ## 🛠️ Tools Reference
 
@@ -276,7 +277,6 @@ recent_reviews = google_maps_reviews(
 
 This server is compatible with any MCP client, including:
 - [Claude Desktop](https://claude.ai/desktop)
-- [Zed Editor](https://zed.dev)
 - [Cursor AI](https://cursor.sh)
 - [Raycast](https://raycast.com)
 - [VS Code](https://code.visualstudio.com) with MCP extensions

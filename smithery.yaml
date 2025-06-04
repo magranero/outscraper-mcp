@@ -1,6 +1,6 @@
 name: outscraper-mcp
 version: 1.0.0
-description: "Comprehensive MCP server for Outscraper's Google Maps data extraction services - 8 complete tools for maps search, reviews, photos, directions, web search, news, Play Store reviews, and contact extraction"
+description: "Streamlined MCP server for Outscraper's Google Maps data extraction services - 2 essential tools for maps search and reviews"
 author: "Jay Ozer"
 license: "Experimental Software License"
 homepage: "https://github.com/jayozer/outscraper-mcp"
@@ -60,87 +60,6 @@ tools:
         default: "most_relevant"
         description: "Sort order: 'most_relevant', 'newest', 'highest_rating', 'lowest_rating'"
 
-  - name: "google_maps_photos"
-    description: "Extract photos from Google Maps places"
-    parameters:
-      - name: "query"
-        type: "string"
-        required: true
-        description: "Place query, place ID, or business name"
-      - name: "photos_limit"
-        type: "integer"
-        required: false
-        default: 20
-        description: "Number of photos per place"
-
-  - name: "google_maps_directions"
-    description: "Get directions between locations"
-    parameters:
-      - name: "query"
-        type: "string"
-        required: true
-        description: "Route query (e.g., 'from Times Square to Central Park')"
-      - name: "travel_mode"
-        type: "string"
-        required: false
-        default: "driving"
-        description: "Mode of travel: 'driving', 'walking', 'bicycling', 'transit'"
-
-  - name: "google_search"
-    description: "Perform Google web search"
-    parameters:
-      - name: "query"
-        type: "string"
-        required: true
-        description: "Search query"
-      - name: "pages_per_query"
-        type: "integer"
-        required: false
-        default: 1
-        description: "Number of result pages"
-
-  - name: "google_search_news"
-    description: "Search Google News"
-    parameters:
-      - name: "query"
-        type: "string"
-        required: true
-        description: "News search query"
-      - name: "pages_per_query"
-        type: "integer"
-        required: false
-        default: 1
-        description: "Number of result pages"
-      - name: "tbs"
-        type: "string"
-        required: false
-        description: "Time filter: 'qdr:d' (day), 'qdr:w' (week), 'qdr:m' (month)"
-
-  - name: "google_play_reviews"
-    description: "Extract Google Play Store app reviews"
-    parameters:
-      - name: "query"
-        type: "string"
-        required: true
-        description: "App package name (e.g., 'com.facebook.katana')"
-      - name: "reviews_limit"
-        type: "integer"
-        required: false
-        default: 100
-        description: "Number of reviews to extract"
-      - name: "sort"
-        type: "string"
-        required: false
-        default: "most_relevant"
-        description: "Sort order: 'most_relevant', 'newest', 'rating'"
-
-  - name: "emails_and_contacts"
-    description: "Extract emails and contacts from domains"
-    parameters:
-      - name: "query"
-        type: "string"
-        required: true
-        description: "Domain name (e.g., 'outscraper.com')"
 
 # Installation instructions
 installation:
