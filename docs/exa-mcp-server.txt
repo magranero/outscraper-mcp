@@ -1,0 +1,620 @@
+Directory structure:
+└── mcp-mirror-exa-labs_exa-mcp-server/
+    ├── README.md
+    ├── package.json
+    ├── tsconfig.json
+    ├── .npmignore
+    └── src/
+        ├── index.ts
+        └── types.ts
+
+================================================
+FILE: README.md
+================================================
+# Exa MCP Server 🔍
+[![npm version](https://badge.fury.io/js/exa-mcp-server.svg)](https://www.npmjs.com/package/exa-mcp-server)
+[![smithery badge](https://smithery.ai/badge/exa)](https://smithery.ai/protocol/exa)
+
+A Model Context Protocol (MCP) server lets AI assistants like Claude use the Exa AI Search API for web searches. This setup allows AI models to get real-time web information in a safe and controlled way.
+
+Demo video https://www.loom.com/share/ac676f29664e4c6cb33a2f0a63772038?sid=0e72619f-5bfc-415d-a705-63d326373f60
+
+## What is MCP? 🤔
+
+The Model Context Protocol (MCP) is a system that lets AI apps, like Claude Desktop, connect to external tools and data sources. It gives a clear and safe way for AI assistants to work with local services and APIs while keeping the user in control.
+
+## What does this server do? 🚀
+
+The Exa MCP server:
+- Enables AI assistants to perform web searches using Exa's powerful search API
+- Provides structured search results including titles, URLs, and content snippets
+- Handles rate limiting and error cases gracefully
+
+
+## Prerequisites 📋
+
+Before you begin, ensure you have:
+
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [Claude Desktop](https://claude.ai/download) installed
+- An [Exa API key](https://dashboard.exa.ai/api-keys)
+- Git installed
+
+You can verify your Node.js installation by running:
+```bash
+node --version  # Should show v18.0.0 or higher
+````
+
+## Installation 🛠️
+
+### NPM Installation
+
+```bash
+npm install -g exa-mcp-server
+```
+
+### Using Smithery
+
+To install the Exa MCP server for Claude Desktop automatically via [Smithery](https://smithery.ai/protocol/exa):
+
+```bash
+npx -y @smithery/cli install exa --client claude
+```
+
+### Manual Installation
+
+1.  Clone the repository:
+    
+
+```
+git clone https://github.com/exa-labs/exa-mcp-server.git
+cd exa-mcp-server
+```
+
+2.  Install dependencies:
+    
+
+```
+npm install --save axios dotenv
+```
+
+3.  Build the project:
+    
+
+```
+npm run build
+```
+
+4.  Create a global link (this makes the server executable from anywhere):
+    
+
+```
+npm link
+```
+
+## Configuration ⚙️
+
+### 1. Configure Claude Desktop to recognize the Exa MCP server
+
+You can find claude_desktop_config.json inside the settings of Claude Desktop app:
+
+Open the Claude Desktop app and enable Developer Mode from the top-left menu bar. 
+
+Once enabled, open Settings (also from the top-left menu bar) and navigate to the Developer Option, where you'll find the Edit Config button. Clicking it will open the claude_desktop_config.json file, allowing you to make the necessary edits. 
+
+OR (if you want to open claude_desktop_config.json from terminal)
+
+#### For macOS:
+
+1.  Open your Claude Desktop configuration:
+    
+
+```
+code ~/Library/Application\ Support/Claude/claude_desktop_config.json
+```
+
+#### For Windows:
+
+1.  Open your Claude Desktop configuration:
+    
+
+```
+code %APPDATA%\Claude\claude_desktop_config.json
+```
+
+
+### 2.  Add the Exa server configuration:
+    
+
+```
+{
+  "mcpServers": {
+    "exa": {
+      "command": "npx",
+      "args": ["/path/to/exa-mcp-server/build/index.js"],
+      "env": {
+        "EXA_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+Replace `your-api-key-here` with your actual Exa API key from [dashboard.exa.ai/api-keys](https://dashboard.exa.ai/api-keys).
+
+### 3. Restart Claude Desktop
+
+For the changes to take effect:
+
+1.  Completely quit Claude Desktop (not just close the window)
+    
+2.  Start Claude Desktop again
+    
+3.  Look for the 🔌 icon to verify the Exa server is connected
+    
+
+## Usage 🎯
+
+Once configured, you can ask Claude to perform web searches. Here are some example prompts:
+
+```
+Can you search for recent developments in quantum computing?
+```
+
+```
+Search for and summarize the latest news about artificial intelligence startups in new york.
+```
+
+```
+Find and analyze recent research papers about climate change solutions.
+```
+
+The server will:
+
+1.  Process the search request
+    
+2.  Query the Exa API
+    
+3.  Return formatted results to Claude
+    
+4.  Cache the search for future reference
+    
+
+## Features ✨
+
+*   **Web Search Tool**: Enables Claude to search the web using natural language queries
+    
+*   **Error Handling**: Gracefully handles API errors and rate limits
+    
+*   **Type Safety**: Full TypeScript implementation with proper type checking
+    
+
+## Troubleshooting 🔧
+
+### Common Issues
+
+1.  **Server Not Found**
+    
+    *   Verify the npm link is correctly set up
+        
+    *   Check Claude Desktop configuration syntax
+        
+    *   Ensure Node.js is properly installed
+        
+2.  **API Key Issues**
+    
+    *   Confirm your Exa API key is valid
+        
+    *   Check the API key is correctly set in the Claude Desktop config
+        
+    *   Verify no spaces or quotes around the API key
+        
+3.  **Connection Issues**
+    
+    *   Restart Claude Desktop completely
+        
+    *   Check Claude Desktop logs:
+        
+        ```
+        # macOS
+        tail -n 20 -f ~/Library/Logs/Claude/mcp*.log
+        ```
+        
+
+### Getting Help
+
+If you encounter issues review the [MCP Documentation](https://modelcontextprotocol.io)
+    
+    
+
+
+## Acknowledgments 🙏
+
+*   [Exa AI](https://exa.ai) for their powerful search API
+    
+*   [Model Context Protocol](https://modelcontextprotocol.io) for the MCP specification
+    
+*   [Anthropic](https://anthropic.com) for Claude Desktop
+    
+
+
+
+================================================
+FILE: package.json
+================================================
+{
+  "name": "exa-mcp-server",
+  "version": "0.1.0",
+  "description": "A Model Context Protocol server with Exa which does web search",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/exa-labs/exa-mcp-server.git"
+  },
+  "bin": {
+    "exa-mcp-server": "./build/index.js"
+  },
+  "files": [
+    "build"
+  ],
+  "keywords": [
+    "mcp",
+    "exa",
+    "search",
+    "claude",
+    "ai"
+  ],
+  "author": "Exa Labs",
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "prepare": "npm run build",
+    "watch": "tsc --watch",
+    "inspector": "npx @modelcontextprotocol/inspector build/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.3",
+    "axios": "^1.7.8",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+
+
+
+================================================
+FILE: tsconfig.json
+================================================
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "outDir": "./build",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
+
+
+
+================================================
+FILE: .npmignore
+================================================
+src/
+tests/
+.github/
+.gitignore
+.npmignore
+tsconfig.json
+*.log
+.env* 
+
+
+================================================
+FILE: src/index.ts
+================================================
+#!/usr/bin/env node
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
+  ErrorCode,
+  McpError
+} from "@modelcontextprotocol/sdk/types.js";
+import axios from "axios";
+import dotenv from "dotenv";
+import {
+  ExaSearchRequest,
+  ExaSearchResponse,
+  SearchArgs,
+  isValidSearchArgs,
+  CachedSearch
+} from "./types.js";
+
+dotenv.config();
+
+const API_KEY = process.env.EXA_API_KEY;
+if (!API_KEY) {
+  throw new Error("EXA_API_KEY environment variable is required");
+}
+
+const API_CONFIG = {
+  BASE_URL: 'https://api.exa.ai',
+  ENDPOINTS: {
+    SEARCH: '/search'
+  },
+  DEFAULT_NUM_RESULTS: 10,
+  MAX_CACHED_SEARCHES: 5
+} as const;
+
+class ExaServer {
+  private server: Server;
+  private axiosInstance;
+  private recentSearches: CachedSearch[] = [];
+
+  constructor() {
+    this.server = new Server({
+      name: "exa-search-server",
+      version: "0.1.0"
+    }, {
+      capabilities: {
+        resources: {},
+        tools: {}
+      }
+    });
+
+    this.axiosInstance = axios.create({
+      baseURL: API_CONFIG.BASE_URL,
+      headers: {
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        'x-api-key': API_KEY
+      }
+    });
+
+    this.setupHandlers();
+    this.setupErrorHandling();
+  }
+
+  private setupErrorHandling(): void {
+    this.server.onerror = (error) => {
+      console.error("[MCP Error]", error);
+    };
+
+    process.on('SIGINT', async () => {
+      await this.server.close();
+      process.exit(0);
+    });
+  }
+
+  private setupHandlers(): void {
+    this.setupResourceHandlers();
+    this.setupToolHandlers();
+  }
+
+  private setupResourceHandlers(): void {
+    // List available resources (recent searches)
+    this.server.setRequestHandler(
+      ListResourcesRequestSchema,
+      async () => ({
+        resources: this.recentSearches.map((search, index) => ({
+          uri: `exa://searches/${index}`,
+          name: `Recent search: ${search.query}`,
+          mimeType: "application/json",
+          description: `Search results for: ${search.query} (${search.timestamp})`
+        }))
+      })
+    );
+
+    // Read specific resource
+    this.server.setRequestHandler(
+      ReadResourceRequestSchema,
+      async (request) => {
+        const match = request.params.uri.match(/^exa:\/\/searches\/(\d+)$/);
+        if (!match) {
+          throw new McpError(
+            ErrorCode.InvalidRequest,
+            `Unknown resource: ${request.params.uri}`
+          );
+        }
+
+        const index = parseInt(match[1]);
+        const search = this.recentSearches[index];
+
+        if (!search) {
+          throw new McpError(
+            ErrorCode.InvalidRequest,
+            `Search result not found: ${index}`
+          );
+        }
+
+        return {
+          contents: [{
+            uri: request.params.uri,
+            mimeType: "application/json",
+            text: JSON.stringify(search.response, null, 2)
+          }]
+        };
+      }
+    );
+  }
+
+  private setupToolHandlers(): void {
+    // List available tools
+    this.server.setRequestHandler(
+      ListToolsRequestSchema,
+      async () => ({
+        tools: [{
+          name: "search",
+          description: "Search the web using Exa AI",
+          inputSchema: {
+            type: "object",
+            properties: {
+              query: {
+                type: "string",
+                description: "Search query"
+              },
+              numResults: {
+                type: "number",
+                description: "Number of results to return (default: 10)",
+                minimum: 1,
+                maximum: 50
+              }
+            },
+            required: ["query"]
+          }
+        }]
+      })
+    );
+
+    // Handle tool calls
+    this.server.setRequestHandler(
+      CallToolRequestSchema,
+      async (request) => {
+        if (request.params.name !== "search") {
+          throw new McpError(
+            ErrorCode.MethodNotFound,
+            `Unknown tool: ${request.params.name}`
+          );
+        }
+
+        if (!isValidSearchArgs(request.params.arguments)) {
+          throw new McpError(
+            ErrorCode.InvalidParams,
+            "Invalid search arguments"
+          );
+        }
+
+        try {
+          const searchRequest: ExaSearchRequest = {
+            query: request.params.arguments.query,
+            type: "auto",
+            numResults: request.params.arguments.numResults || API_CONFIG.DEFAULT_NUM_RESULTS,
+            contents: {
+              text: true
+            }
+          };
+
+          const response = await this.axiosInstance.post<ExaSearchResponse>(
+            API_CONFIG.ENDPOINTS.SEARCH,
+            searchRequest
+          );
+
+          // Cache the search result
+          this.recentSearches.unshift({
+            query: searchRequest.query,
+            response: response.data,
+            timestamp: new Date().toISOString()
+          });
+
+          // Keep only recent searches
+          if (this.recentSearches.length > API_CONFIG.MAX_CACHED_SEARCHES) {
+            this.recentSearches.pop();
+          }
+
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify(response.data, null, 2)
+            }]
+          };
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            return {
+              content: [{
+                type: "text",
+                text: `Exa API error: ${error.response?.data?.message ?? error.message}`
+              }],
+              isError: true,
+            }
+          }
+          throw error;
+        }
+      }
+    );
+  }
+
+  async run(): Promise<void> {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    console.error("Exa Search MCP server running on stdio");
+  }
+}
+
+const server = new ExaServer();
+server.run().catch(console.error);
+
+
+================================================
+FILE: src/types.ts
+================================================
+// Exa API Types
+export interface ExaSearchRequest {
+  query: string;
+  type: string;
+  numResults: number;
+  contents: {
+    text: boolean;
+  };
+}
+
+export interface ExaSearchResult {
+  score: number;
+  title: string;
+  id: string;
+  url: string;
+  publishedDate: string;
+  author: string;
+  text: string;
+  image?: string;
+  favicon?: string;
+}
+
+export interface ExaSearchResponse {
+  requestId: string;
+  autopromptString: string;
+  resolvedSearchType: string;
+  results: ExaSearchResult[];
+}
+
+// Tool Types
+export interface SearchArgs {
+  query: string;
+  numResults?: number;
+}
+
+// Type guard for search arguments
+export function isValidSearchArgs(args: any): args is SearchArgs {
+  return (
+    typeof args === "object" &&
+    args !== null &&
+    "query" in args &&
+    typeof args.query === "string" &&
+    (args.numResults === undefined || typeof args.numResults === "number")
+  );
+}
+
+// Recent searches cache type
+export interface CachedSearch {
+  query: string;
+  response: ExaSearchResponse;
+  timestamp: string;
+}
+
