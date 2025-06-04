@@ -27,8 +27,8 @@ OUTSCRAPER_API_BASE = "https://api.app.outscraper.com"
 API_KEY = os.getenv("OUTSCRAPER_API_KEY")
 
 if not API_KEY:
-    logger.error("OUTSCRAPER_API_KEY environment variable is required. Please set it before running the server.")
-    raise ValueError("OUTSCRAPER_API_KEY environment variable is required")
+    logger.warning("OUTSCRAPER_API_KEY environment variable not set. Server will start but tools will not function without a valid API key.")
+    API_KEY = "placeholder_key_for_deployment"
 
 class OutscraperClient:
     """Outscraper API client for making requests"""
