@@ -1,5 +1,5 @@
 name: outscraper-mcp
-version: 1.0.0
+version: 1.0.1
 description: "Streamlined MCP server for Outscraper's Google Maps data extraction services - 2 essential tools for maps search and reviews"
 author: "Jay Ozer"
 license: "Experimental Software License"
@@ -16,14 +16,15 @@ startCommand:
   type: "http"
   configSchema:
     type: "object"
+    required: ["apiKey"]
     properties:
       apiKey:
         type: "string"
+        title: "Outscraper API Key"
         description: "Your Outscraper API key. Get yours at https://app.outscraper.com/profile"
-        title: "API Key"
-    required: ["apiKey"]
+        pattern: "^[A-Za-z0-9+/=]+$"
   exampleConfig:
-    apiKey: "your_outscraper_api_key_here"
+    apiKey: "YmRlMzYwMDRmZjc0NDFhYzllOGE3Nzc2Zjc3YTYwNDZ8ZGU2MDFmYTQzYQ"
 
 # Tags for discoverability
 tags:
