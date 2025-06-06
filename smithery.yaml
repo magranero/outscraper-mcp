@@ -6,87 +6,24 @@ license: "Experimental Software License"
 homepage: "https://github.com/jayozer/outscraper-mcp"
 repository: "https://github.com/jayozer/outscraper-mcp"
 
-# Server configuration
-server:
-  command: "outscraper-mcp"
-  python_version: ">=3.10"
+# Deployment configuration for Smithery
+runtime: "container"
+build:
+  dockerfile: "Dockerfile"
+  dockerBuildPath: "."
 
-# Environment variables
-environment:
-  required:
-    - name: "OUTSCRAPER_API_KEY"
-      description: "API key for Outscraper services. Get yours at https://app.outscraper.com/profile"
-      type: "string"
-
-# Tools provided by this server
-tools:
-  - name: "google_maps_search"
-    description: "Search for businesses and places on Google Maps"
-    parameters:
-      - name: "query"
+startCommand:
+  type: "http"
+  configSchema:
+    type: "object"
+    properties:
+      apiKey:
         type: "string"
-        required: true
-        description: "Search query (e.g., 'restaurants brooklyn usa')"
-      - name: "limit"
-        type: "integer"
-        required: false
-        default: 20
-        description: "Number of results (max: 400)"
-      - name: "language"
-        type: "string"
-        required: false
-        default: "en"
-        description: "Language code"
-      - name: "region"
-        type: "string"
-        required: false
-        description: "Country/region code (e.g., 'US', 'GB')"
-
-  - name: "google_maps_reviews"
-    description: "Extract reviews from Google Maps places"
-    parameters:
-      - name: "query"
-        type: "string"
-        required: true
-        description: "Place query, place ID, or business name"
-      - name: "reviews_limit"
-        type: "integer"
-        required: false
-        default: 10
-        description: "Number of reviews per place (0 for unlimited)"
-      - name: "sort"
-        type: "string"
-        required: false
-        default: "most_relevant"
-        description: "Sort order: 'most_relevant', 'newest', 'highest_rating', 'lowest_rating'"
-
-
-# Installation instructions
-installation:
-  pypi: "outscraper-mcp"
-  github: "jayozer/outscraper-mcp"
-  
-# Configuration examples for different clients
-clients:
-  claude_desktop:
-    config:
-      mcpServers:
-        outscraper:
-          command: "uvx"
-          args: ["outscraper-mcp"]
-          env:
-            OUTSCRAPER_API_KEY: "your_api_key_here"
-  
-  zed:
-    config:
-      assistant:
-        provider:
-          name: "anthropic"
-          mcp_servers:
-            outscraper:
-              command: "outscraper-mcp"
-              env:
-                OUTSCRAPER_API_KEY: "your_api_key_here"
+        description: "Your Outscraper API key. Get yours at https://app.outscraper.com/profile"
+        title: "API Key"
+    required: ["apiKey"]
+  exampleConfig:
+    apiKey: "your_outscraper_api_key_here"
 
 # Tags for discoverability
 tags:

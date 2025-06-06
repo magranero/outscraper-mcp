@@ -59,14 +59,24 @@ uvx outscraper-mcp
 
 ### Publishing to Smithery
 
-1. **Ensure PyPI package is published**
+1. **Ensure the repository is properly configured:**
+   - `smithery.yaml` is configured for container deployment
+   - `Dockerfile` is present and functional
+   - HTTP server module is working (`server_http.py`)
 
 2. **Submit to Smithery:**
    - Create account at [smithery.ai](https://smithery.ai)
-   - Submit your package via their registry
-   - Include the `smithery.yaml` configuration
+   - Connect your GitHub repository
+   - Navigate to Deployments tab
+   - Click Deploy to build and host your container
 
-3. **Update Documentation:**
+3. **Configuration Requirements:**
+   - Repository must have `smithery.yaml` with `runtime: "container"`
+   - Dockerfile must expose HTTP endpoint at `/mcp`
+   - Server must listen on `PORT` environment variable
+   - Container must handle configuration via query parameters
+
+4. **Update Documentation:**
    - Add Smithery badge to README
    - Update installation instructions
 
@@ -140,9 +150,19 @@ The repository includes GitHub Actions for automated:
 - Ensure version number is incremented
 
 **Smithery Issues:**
-- Verify PyPI package is accessible
-- Check `smithery.yaml` syntax
-- Ensure all required fields are present
+- Verify `smithery.yaml` uses `runtime: "container"` format
+- Check that Dockerfile is present and builds successfully
+- Ensure HTTP server exposes `/mcp` endpoint correctly
+- Verify server listens on `PORT` environment variable
+- Test container locally before deploying:
+  ```bash
+  docker build -t outscraper-mcp .
+  docker run -p 8000:8000 -e PORT=8000 outscraper-mcp
+  curl http://localhost:8000/health
+  curl http://localhost:8000/mcp
+  ```
+- Check deployment logs in Smithery dashboard
+- Ensure all dependencies are properly specified in pyproject.toml
 
 ### Testing Locally
 
