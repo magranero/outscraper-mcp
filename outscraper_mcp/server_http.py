@@ -16,7 +16,11 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 # Import the existing MCP server
-from .server import mcp
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from outscraper_mcp.server import mcp
 
 app = FastAPI(
     title="Outscraper MCP Server",
@@ -134,7 +138,7 @@ async def _execute_tool(tool_name: str, arguments: Dict[str, Any]) -> str:
     """Execute a tool using the MCP server"""
     
     # Import the tool functions from server
-    from .server import google_maps_search, google_maps_reviews
+    from outscraper_mcp.server import google_maps_search, google_maps_reviews
     
     if tool_name == "google_maps_search":
         return google_maps_search(**arguments)
@@ -147,13 +151,21 @@ def main():
     """Main entry point for HTTP server"""
     port = int(os.environ.get("PORT", 8000))
     
-    uvicorn.run(
-        "outscraper_mcp.server_http:app",
-        host="0.0.0.0",
-        port=port,
-        log_level="info",
-        access_log=True
-    )
+    print(f"🚀 Starting Outscraper MCP HTTP Server on port {port}")
+    print(f"🔗 Health check: http://0.0.0.0:{port}/health")
+    print(f"🔗 MCP endpoint: http://0.0.0.0:{port}/mcp")
+    
+    try:
+        uvicorn.run(
+            app,  # Use the app object directly instead of string import
+            host="0.0.0.0",
+            port=port,
+            log_level="info",
+            access_log=True
+        )
+    except Exception as e:
+        print(f"❌ Error starting server: {e}")
+        raise
 
 if __name__ == "__main__":
     main() 
