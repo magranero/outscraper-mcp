@@ -32,6 +32,8 @@ dependencies = [
     "typing-extensions>=4.0.0",
     "fastapi>=0.104.0",
     "uvicorn[standard]>=0.24.0",
+    "starlette<0.30.0",
+    "urllib3>=2.4.0",
 ]
 
 [project.optional-dependencies]
@@ -109,6 +111,7 @@ extend-ignore = ["E203", "W503"]
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.1",
     "pytest>=8.3.5",
     "pytest-asyncio>=1.0.0",
     "twine>=6.1.0",

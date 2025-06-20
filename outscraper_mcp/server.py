@@ -11,12 +11,18 @@ Tools:
 
 import logging
 import os
+import time
 from typing import Any, List, Union, Optional, Dict
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from fastmcp import FastMCP
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+# Set up logging with more detailed formatting
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger("outscraper-mcp")
 
 # Create FastMCP server instance
@@ -30,18 +36,48 @@ if not API_KEY:
     logger.warning("OUTSCRAPER_API_KEY environment variable not set. Server will start but tools will not function without a valid API key.")
     API_KEY = "placeholder_key_for_deployment"
 
+# Constants for validation
+MAX_SEARCH_LIMIT = 400
+MAX_REVIEWS_LIMIT = 10000
+VALID_SORT_OPTIONS = ['most_relevant', 'newest', 'highest_rating', 'lowest_rating']
+VALID_LANGUAGE_CODES = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh']  # Common language codes
+
 class OutscraperClient:
-    """Outscraper API client for making requests"""
+    """Outscraper API client for making requests with retry logic"""
     
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.headers = {
             'X-API-KEY': api_key,
-            'client': 'MCP Server'
+            'client': 'MCP Server',
+            'User-Agent': 'Outscraper-MCP/1.0.0'
         }
+        
+        # Configure session with retry logic
+        self.session = requests.Session()
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET", "POST"]
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
     
-    def _handle_response(self, response: requests.Response, wait_async: bool = False) -> Union[List, Dict]:
-        """Handle API response and return data"""
+    def _handle_response(self, response: requests.Response, wait_async: bool = False) -> Union[List, Dict, str]:
+        """Handle API response and return data
+        
+        Args:
+            response: The HTTP response from the API
+            wait_async: Whether this was an async request
+            
+        Returns:
+            Parsed response data or formatted message for async requests
+            
+        Raises:
+            Exception: For API errors or invalid responses
+        """
         logger.info(f"API Response - Status: {response.status_code}, URL: {response.url}")
         
         if 199 < response.status_code < 300:
@@ -75,10 +111,21 @@ class OutscraperClient:
             error_msg = f"API request failed with status {response.status_code}"
             try:
                 error_json = response.json()
-                if isinstance(error_json, dict) and 'message' in error_json:
-                    error_msg += f": {error_json['message']}"
+                if isinstance(error_json, dict):
+                    if 'message' in error_json:
+                        error_msg += f": {error_json['message']}"
+                    elif 'error' in error_json:
+                        error_msg += f": {error_json['error']}"
             except:
                 error_msg += f": {response.text[:200]}"
+            
+            # Add specific error handling for common status codes
+            if response.status_code == 401:
+                error_msg = "Invalid API key. Please check your OUTSCRAPER_API_KEY."
+            elif response.status_code == 429:
+                error_msg = "Rate limit exceeded. Please wait before making more requests."
+            elif response.status_code == 402:
+                error_msg = "Insufficient credits. Please check your Outscraper account balance."
             
             logger.error(error_msg)
             raise Exception(error_msg)
@@ -108,16 +155,22 @@ class OutscraperClient:
             params['enrichment'] = enrichment
             
         try:
-            response = requests.get(
+            response = self.session.get(
                 f'{OUTSCRAPER_API_BASE}/maps/search-v3',
                 params=params,
                 headers=self.headers,
-                timeout=30
+                timeout=60 if wait_async else 30
             )
             return self._handle_response(response, wait_async)
+        except requests.exceptions.Timeout:
+            logger.error(f"Request timeout during Google Maps search")
+            raise Exception("Request timed out. Please try again with fewer queries or lower limit.")
+        except requests.exceptions.ConnectionError:
+            logger.error(f"Connection error during Google Maps search")
+            raise Exception("Connection error. Please check your internet connection.")
         except requests.exceptions.RequestException as e:
             logger.error(f"Network error during Google Maps search: {e}")
-            raise Exception(f"Network error: {e}")
+            raise Exception(f"Network error: {str(e)}")
         except Exception as e:
             logger.error(f"Unexpected error during Google Maps search: {e}")
             raise
@@ -149,16 +202,22 @@ class OutscraperClient:
             params['cutoff'] = cutoff
             
         try:
-            response = requests.get(
+            response = self.session.get(
                 f'{OUTSCRAPER_API_BASE}/maps/reviews-v3',
                 params=params,
                 headers=self.headers,
-                timeout=30
+                timeout=60 if wait_async else 30
             )
             return self._handle_response(response, wait_async)
+        except requests.exceptions.Timeout:
+            logger.error(f"Request timeout during Google Maps reviews")
+            raise Exception("Request timed out. Please try again with fewer reviews or places.")
+        except requests.exceptions.ConnectionError:
+            logger.error(f"Connection error during Google Maps reviews")
+            raise Exception("Connection error. Please check your internet connection.")
         except requests.exceptions.RequestException as e:
             logger.error(f"Network error during Google Maps reviews: {e}")
-            raise Exception(f"Network error: {e}")
+            raise Exception(f"Network error: {str(e)}")
         except Exception as e:
             logger.error(f"Unexpected error during Google Maps reviews: {e}")
             raise
@@ -184,6 +243,15 @@ def google_maps_search(query: str, limit: int = 20, language: str = "en",
     Returns:
         Formatted search results with business information
     """
+    # Input validation
+    if not query or not query.strip():
+        return "Error: Search query cannot be empty."
+    
+    if limit < 1 or limit > MAX_SEARCH_LIMIT:
+        return f"Error: Limit must be between 1 and {MAX_SEARCH_LIMIT}."
+    
+    if language and len(language) != 2:
+        logger.warning(f"Unusual language code: {language}. Standard codes are 2 characters (e.g., 'en', 'es').")
     try:
         logger.info(f"Searching Google Maps for: {query}")
         
@@ -199,20 +267,47 @@ def google_maps_search(query: str, limit: int = 20, language: str = "en",
         if not results:
             return "No results found for the given query."
         
+        # Handle async response
+        if isinstance(results, str) and "Request processing asynchronously" in results:
+            return results
+        
         # Format results for better readability
         formatted_results = []
         
         if isinstance(results, list) and len(results) > 0:
             places = results[0] if isinstance(results[0], list) else results
             
+            # Ensure places is a list
+            if not isinstance(places, list):
+                places = [places]
+            
             for i, place in enumerate(places[:limit], 1):
                 if isinstance(place, dict):
-                    formatted_place = f"**{i}. {place.get('name', 'Unknown')}**\n"
-                    formatted_place += f"   📍 Address: {place.get('full_address', 'N/A')}\n"
-                    formatted_place += f"   ⭐ Rating: {place.get('rating', 'N/A')} ({place.get('reviews', 0)} reviews)\n"
-                    formatted_place += f"   📞 Phone: {place.get('phone', 'N/A')}\n"
-                    formatted_place += f"   🌐 Website: {place.get('site', 'N/A')}\n"
-                    formatted_place += f"   🏷️ Type: {place.get('type', 'N/A')}\n"
+                    name = place.get('name', 'Unknown')
+                    formatted_place = f"**{i}. {name}**\n"
+                    
+                    # Address
+                    address = place.get('full_address') or place.get('address', 'N/A')
+                    formatted_place += f"   📍 Address: {address}\n"
+                    
+                    # Rating and reviews
+                    rating = place.get('rating')
+                    reviews = place.get('reviews', 0)
+                    if rating:
+                        formatted_place += f"   ⭐ Rating: {rating} ({reviews} reviews)\n"
+                    else:
+                        formatted_place += f"   ⭐ Rating: No ratings yet\n"
+                    
+                    # Contact info
+                    phone = place.get('phone', 'N/A')
+                    formatted_place += f"   📞 Phone: {phone}\n"
+                    
+                    website = place.get('site', 'N/A')
+                    formatted_place += f"   🌐 Website: {website}\n"
+                    
+                    # Type/category
+                    place_type = place.get('type') or place.get('main_category', 'N/A')
+                    formatted_place += f"   🏷️ Type: {place_type}\n"
                     
                     if place.get('working_hours'):
                         formatted_place += f"   🕒 Hours: {place.get('working_hours_old_format', 'N/A')}\n"
@@ -254,6 +349,21 @@ def google_maps_reviews(query: str, reviews_limit: int = 10, limit: int = 1,
     Returns:
         Formatted reviews data with place information and individual reviews
     """
+    # Input validation
+    if not query or not query.strip():
+        return "Error: Query cannot be empty."
+    
+    if reviews_limit < 0 or reviews_limit > MAX_REVIEWS_LIMIT:
+        return f"Error: Reviews limit must be between 0 and {MAX_REVIEWS_LIMIT}."
+    
+    if limit < 1:
+        return "Error: Limit must be at least 1."
+    
+    if sort not in VALID_SORT_OPTIONS:
+        return f"Error: Sort must be one of {VALID_SORT_OPTIONS}."
+    
+    if cutoff and cutoff < 0:
+        return "Error: Cutoff timestamp must be positive."
     try:
         logger.info(f"Getting reviews for: {query}")
         
@@ -270,8 +380,16 @@ def google_maps_reviews(query: str, reviews_limit: int = 10, limit: int = 1,
         if not results:
             return "No reviews found for the given query."
         
+        # Handle async response
+        if isinstance(results, str) and "Request processing asynchronously" in results:
+            return results
+        
         # Format results for better readability
         formatted_results = []
+        
+        # Ensure results is a list
+        if not isinstance(results, list):
+            results = [results]
         
         if isinstance(results, list):
             for place_data in results:

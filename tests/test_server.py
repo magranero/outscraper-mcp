@@ -19,44 +19,54 @@ class TestOutscraperClient:
         assert client.headers['X-API-KEY'] == "test_api_key"
         assert client.headers['client'] == "MCP Server"
     
-    @patch('outscraper_mcp.server.requests.get')
-    def test_google_maps_search_success(self, mock_get):
+    @patch('outscraper_mcp.server.requests.Session')
+    def test_google_maps_search_success(self, mock_session_class):
         """Test successful Google Maps search"""
-        # Mock response
+        # Mock session and response
+        mock_session = Mock()
+        mock_session_class.return_value = mock_session
+        
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = [[{"name": "Test Business", "rating": 4.5}]]
-        mock_get.return_value = mock_response
+        mock_session.get.return_value = mock_response
         
         client = OutscraperClient("test_api_key")
         result = client.google_maps_search("test query")
         
         assert result is not None
-        mock_get.assert_called_once()
+        mock_session.get.assert_called_once()
     
-    @patch('outscraper_mcp.server.requests.get')
-    def test_google_maps_reviews_success(self, mock_get):
+    @patch('outscraper_mcp.server.requests.Session')
+    def test_google_maps_reviews_success(self, mock_session_class):
         """Test successful Google Maps reviews"""
-        # Mock response
+        # Mock session and response
+        mock_session = Mock()
+        mock_session_class.return_value = mock_session
+        
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = [{"name": "Test Business", "reviews_data": []}]
-        mock_get.return_value = mock_response
+        mock_session.get.return_value = mock_response
         
         client = OutscraperClient("test_api_key")
         result = client.google_maps_reviews("test query")
         
         assert result is not None
-        mock_get.assert_called_once()
+        mock_session.get.assert_called_once()
     
-    @patch('outscraper_mcp.server.requests.get')
-    def test_api_error_handling(self, mock_get):
+    @patch('outscraper_mcp.server.requests.Session')
+    def test_api_error_handling(self, mock_session_class):
         """Test API error handling"""
-        # Mock error response
+        # Mock session and error response
+        mock_session = Mock()
+        mock_session_class.return_value = mock_session
+        
         mock_response = Mock()
         mock_response.status_code = 400
         mock_response.text = "Bad Request"
-        mock_get.return_value = mock_response
+        mock_response.json.side_effect = ValueError("Invalid JSON")
+        mock_session.get.return_value = mock_response
         
         client = OutscraperClient("test_api_key")
         
