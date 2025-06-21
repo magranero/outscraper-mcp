@@ -9,11 +9,19 @@ over HTTP at the /mcp endpoint.
 import os
 import asyncio
 import json
-from typing import Dict, Any
-from fastapi import FastAPI, Request, HTTPException
+import logging
+from typing import Dict, Any, Optional
+from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger("outscraper-mcp-http")
 
 # Import the existing MCP server
 import sys
@@ -40,7 +48,13 @@ app.add_middleware(
 @app.get("/health")
 async def health_check():
     """Health check endpoint for container health monitoring"""
-    return {"status": "healthy", "service": "outscraper-mcp"}
+    api_key_set = bool(os.environ.get("OUTSCRAPER_API_KEY", "").strip())
+    return {
+        "status": "healthy",
+        "service": "outscraper-mcp",
+        "version": "1.0.0",
+        "api_key_configured": api_key_set
+    }
 
 @app.get("/mcp")
 async def mcp_get(request: Request):
@@ -91,9 +105,13 @@ async def mcp_post(request: Request):
         # Set environment variables from config
         if config.get("apiKey"):
             os.environ["OUTSCRAPER_API_KEY"] = config["apiKey"]
+            logger.info("API key set from request parameters")
         
         # Get request body
-        body = await request.json()
+        try:
+            body = await request.json()
+        except json.JSONDecodeError:
+            raise HTTPException(status_code=400, detail="Invalid JSON in request body")
         
         # Extract tool call information
         tool_name = body.get("tool")
@@ -102,12 +120,18 @@ async def mcp_post(request: Request):
         if not tool_name:
             raise HTTPException(status_code=400, detail="Missing 'tool' in request body")
         
+        # Log the tool execution
+        logger.info(f"Executing tool: {tool_name} with arguments: {list(arguments.keys())}")
+        
         # Execute the tool using the MCP server
         result = await _execute_tool(tool_name, arguments)
         
         return {"result": result}
         
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Error in mcp_post: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/mcp")
@@ -135,17 +159,36 @@ def _parse_query_params(params: Dict[str, str]) -> Dict[str, Any]:
     return config
 
 async def _execute_tool(tool_name: str, arguments: Dict[str, Any]) -> str:
-    """Execute a tool using the MCP server"""
+    """Execute a tool using the MCP server
+    
+    Args:
+        tool_name: Name of the tool to execute
+        arguments: Arguments to pass to the tool
+        
+    Returns:
+        Tool execution result as a string
+        
+    Raises:
+        ValueError: If tool name is unknown
+    """
     
     # Import the tool functions from server
     from outscraper_mcp.server import google_maps_search, google_maps_reviews
     
-    if tool_name == "google_maps_search":
-        return google_maps_search(**arguments)
-    elif tool_name == "google_maps_reviews":
-        return google_maps_reviews(**arguments)
-    else:
-        raise ValueError(f"Unknown tool: {tool_name}")
+    try:
+        if tool_name == "google_maps_search":
+            return google_maps_search(**arguments)
+        elif tool_name == "google_maps_reviews":
+            return google_maps_reviews(**arguments)
+        else:
+            raise ValueError(f"Unknown tool: {tool_name}. Available tools: google_maps_search, google_maps_reviews")
+    except TypeError as e:
+        # Handle missing or invalid arguments
+        raise ValueError(f"Invalid arguments for {tool_name}: {str(e)}")
+    except Exception as e:
+        # Log the error and re-raise
+        logger.error(f"Error executing tool {tool_name}: {str(e)}", exc_info=True)
+        raise
 
 def main():
     """Main entry point for HTTP server"""
