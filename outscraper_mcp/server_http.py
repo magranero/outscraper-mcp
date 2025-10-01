@@ -26,7 +26,7 @@ def main():
     logger.info("Starting Outscraper MCP Server in HTTP mode...")
 
     # Get the Starlette app from FastMCP and add CORS middleware
-    app = mcp.get_asgi_app()
+    app = mcp.streamable_http_app()
 
     # Add CORS middleware with proper header exposure for MCP session management
     app.add_middleware(
@@ -50,7 +50,7 @@ def main():
         app,
         host="0.0.0.0",  # Listen on all interfaces for containerized deployment
         port=port,
-        log_level="info"
+        log_level="debug"
     )
 
 if __name__ == "__main__":
