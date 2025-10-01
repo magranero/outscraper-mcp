@@ -1,12 +1,3 @@
-name: outscraper-mcp
-version: 1.0.1
-description: "Streamlined MCP server for Outscraper's Google Maps data extraction services - 2 essential tools for maps search and reviews"
-author: "Jay Ozer"
-license: "Experimental Software License"
-homepage: "https://github.com/jayozer/outscraper-mcp"
-repository: "https://github.com/jayozer/outscraper-mcp"
-
-# Deployment configuration for Smithery
 runtime: "container"
 build:
   dockerfile: "Dockerfile"
@@ -24,16 +15,4 @@ startCommand:
         description: "Your Outscraper API key. Get yours at https://app.outscraper.com/profile"
         pattern: "^[A-Za-z0-9+/=]+$"
   exampleConfig:
-    apiKey: "YmRlMzYwMDRmZjc0NDFhYzllOGE3Nzc2Zjc3YTYwNDZ8ZGU2MDFmYTQzYQ"
-
-# Tags for discoverability
-tags:
-  - "google-maps"
-  - "data-extraction"
-  - "business-intelligence"
-  - "reviews"
-  - "search"
-  - "outscraper"
-  - "mcp"
-  - "ai"
-  - "claude" 
+    apiKey: "YmRlMzYwMDRmZjc0NDFhYzllOGE3Nzc2Zjc3YTYwNDZ8ZGU2MDFmYTQzYQ" 
