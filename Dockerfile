@@ -19,7 +19,7 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
 
 # Expose port (Smithery will set PORT env var, defaults to 8000)
-EXPOSE 8000
+EXPOSE 8032
 
 # Run the server directly with Python (dependencies already installed)
 CMD ["python", "-m", "outscraper_mcp.server_http"]
